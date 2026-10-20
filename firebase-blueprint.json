@@ -1,0 +1,179 @@
+{
+  "entities": {
+    "Client": {
+      "title": "Client",
+      "description": "Studio client information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "notes": { "type": "string" },
+        "status": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "createdAt"]
+    },
+    "DesignItem": {
+      "title": "DesignItem",
+      "description": "Graphic design and branding project items",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "string" },
+        "price": { "type": "number" },
+        "deadline": { "type": "string" },
+        "description": { "type": "string" },
+        "deliverableUrl": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "clientId", "title", "createdAt"]
+    },
+    "Quotation": {
+      "title": "Quotation",
+      "description": "Project quotation documents",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "quotationNumber": { "type": "string" },
+        "title": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientCompany": { "type": "string" },
+        "clientEmail": { "type": "string" },
+        "clientPhone": { "type": "string" },
+        "clientAddress": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "tax": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "depositPercent": { "type": "number" },
+        "depositAmount": { "type": "number" },
+        "notes": { "type": "string" },
+        "paymentTerms": { "type": "string" },
+        "bankInfo": { "type": "object" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "validUntil": { "type": "string" }
+      },
+      "required": ["id", "quotationNumber", "grandTotal", "createdAt"]
+    },
+    "VideoContent": {
+      "title": "VideoContent",
+      "description": "Video production and TikTok / Reels content plans",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "topic": { "type": "string" },
+        "platform": { "type": "string" },
+        "format": { "type": "string" },
+        "hook": { "type": "string" },
+        "body": { "type": "string" },
+        "cta": { "type": "string" },
+        "visualNotes": { "type": "string" },
+        "status": { "type": "string" },
+        "targetAudience": { "type": "string" },
+        "scheduledDate": { "type": "string" },
+        "hashtags": { "type": "array", "items": { "type": "string" } },
+        "script": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "createdAt"]
+    },
+    "StudioProfile": {
+      "title": "StudioProfile",
+      "description": "Studio business information and settings",
+      "type": "object",
+      "properties": {
+        "studioName": { "type": "string" },
+        "founder": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "website": { "type": "string" },
+        "bankName": { "type": "string" },
+        "bankAccount": { "type": "string" },
+        "bankOwner": { "type": "string" },
+        "bankBranch": { "type": "string" },
+        "bankQrImage": { "type": "string" },
+        "defaultPaymentTerms": { "type": "string" },
+        "defaultNote": { "type": "string" }
+      }
+    },
+    "BrandProfile": {
+      "title": "BrandProfile",
+      "description": "Brand identity and guidelines for content planning",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "industry": { "type": "string" },
+        "targetAudience": { "type": "string" },
+        "toneOfVoice": { "type": "string" },
+        "coreMessage": { "type": "string" },
+        "designStyle": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "WeeklyPlan": {
+      "title": "WeeklyPlan",
+      "description": "Weekly social media content planner",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "brandId": { "type": "string" },
+        "weekTitle": { "type": "string" },
+        "startDate": { "type": "string" },
+        "posts": { "type": "array" }
+      },
+      "required": ["id", "brandId", "weekTitle", "startDate"]
+    }
+  },
+  "firestore": {
+    "clients": {
+      "schema": "Client",
+      "description": "All clients of the design studio"
+    },
+    "designItems": {
+      "schema": "DesignItem",
+      "description": "All design project items"
+    },
+    "quotations": {
+      "schema": "Quotation",
+      "description": "All quotations generated by the studio"
+    },
+    "contents": {
+      "schema": "VideoContent",
+      "description": "All video scripts and content planner entries"
+    },
+    "studio": {
+      "schema": "StudioProfile",
+      "description": "Studio configuration and profile settings"
+    },
+    "pricingBoards": {
+      "schema": "ServicePricingBoard",
+      "description": "Service pricing boards and quotation packages"
+    },
+    "brands": {
+      "schema": "BrandProfile",
+      "description": "Brand profiles for social media content planning"
+    },
+    "weeklyPlans": {
+      "schema": "WeeklyPlan",
+      "description": "Weekly fanpage content plans"
+    }
+  }
+}

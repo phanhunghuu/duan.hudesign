@@ -1,0 +1,8 @@
+{
+  "name": "Remix Hủ Design - Studio \u0026 Content Management",
+  "description": "Hệ thống quản lý công việc thiết kế, khách hàng, tạo báo giá chuyên nghiệp và lập kế hoạch đăng bài Fanpage hàng tuần với trợ lý AI tự động lên lịch, brief thiết kế và xuất bản duyệt cho HỦ DESIGN.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow studio management access to all primary collections
+    match /clients/{document=**} {
+      allow read, write: if true;
+    }
+    match /designItems/{document=**} {
+      allow read, write: if true;
+    }
+    match /quotations/{document=**} {
+      allow read, write: if true;
+    }
+    match /contents/{document=**} {
+      allow read, write: if true;
+    }
+    match /studio/{document=**} {
+      allow read, write: if true;
+    }
+    match /pricingBoards/{document=**} {
+      allow read, write: if true;
+    }
+    match /brands/{document=**} {
+      allow read, write: if true;
+    }
+    match /weeklyPlans/{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
