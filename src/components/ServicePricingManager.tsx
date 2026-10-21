@@ -40,7 +40,8 @@ import {
   FolderOpen,
   Search,
   Clock,
-  CheckCheck
+  CheckCheck,
+  MoreHorizontal,
 } from 'lucide-react';
 
 interface ServicePricingManagerProps {
@@ -77,6 +78,7 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
 
   // Editor mode: 'preview' (chế độ xem & xuất ảnh) hoặc 'editor' (chế độ tùy chỉnh nội dung)
   const [viewMode, setViewMode] = useState<'preview' | 'editor'>('preview');
+  const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
 
   // Export image states
   const captureRef = useRef<HTMLDivElement>(null);
@@ -528,7 +530,7 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-gray-900 text-white text-xs font-semibold shadow-2xl border border-gray-700 animate-in fade-in slide-in-from-bottom-4">
@@ -538,12 +540,54 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
       )}
 
       {/* Top Toolbar */}
-      <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${
-        isLight ? 'bg-white border-gray-200 shadow-xs' : 'bg-gray-900 border-gray-800'
+      <div className={`rounded-xl border ${
+        isLight ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'
       }`}>
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="p-5 sm:p-6 border-b border-gray-200 dark:border-gray-800 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">QUẢN LÝ DỊCH VỤ</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Bảng giá dịch vụ</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Chọn bảng giá, cập nhật các gói và xem bản dành cho khách hàng.</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <button
+              onClick={handleSaveCurrentBoard}
+              className="min-h-10 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition"
+              title="Lưu lại toàn bộ bảng giá này vào hệ thống và Cloud"
+            >
+              <Save className="w-4 h-4" /> Lưu bảng giá
+            </button>
+            <div className={`flex items-center p-1 rounded-lg border ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-gray-800 border-gray-700'}`}>
+              <button onClick={() => setViewMode('preview')} aria-pressed={viewMode === 'preview'} className={`min-h-9 inline-flex items-center gap-1.5 px-3 rounded-md text-sm font-medium transition ${viewMode === 'preview' ? (isLight ? 'bg-white text-gray-900 shadow-xs' : 'bg-gray-900 text-white shadow-xs') : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>
+                <Eye className="w-4 h-4" /> Xem trước
+              </button>
+              <button onClick={() => setViewMode('editor')} aria-pressed={viewMode === 'editor'} className={`min-h-9 inline-flex items-center gap-1.5 px-3 rounded-md text-sm font-medium transition ${viewMode === 'editor' ? (isLight ? 'bg-white text-blue-600 shadow-xs' : 'bg-gray-900 text-blue-400 shadow-xs') : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>
+                <Edit3 className="w-4 h-4" /> Chỉnh sửa
+              </button>
+            </div>
+            <div className="relative">
+              <button type="button" onClick={() => setIsMoreActionsOpen((open) => !open)} aria-expanded={isMoreActionsOpen} className={`min-h-10 inline-flex items-center gap-2 rounded-lg border px-3 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${isLight ? 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50' : 'border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700'}`}>
+                <MoreHorizontal className="h-4 w-4" /> Thao tác
+              </button>
+              {isMoreActionsOpen && (
+                <div className={`absolute right-0 top-full z-40 mt-2 w-56 rounded-xl border p-1 shadow-lg ${isLight ? 'border-gray-200 bg-white' : 'border-gray-700 bg-gray-900'}`}>
+                  <button onClick={() => { setIsMoreActionsOpen(false); setAiTargetTierId(null); setIsAIModalOpen(true); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-200 hover:bg-gray-800'}`}><Sparkles className="h-4 w-4 text-amber-500" /> Viết nội dung bằng AI</button>
+                  <button onClick={() => { setIsMoreActionsOpen(false); handleDuplicateBoard(); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-200 hover:bg-gray-800'}`}><Copy className="h-4 w-4" /> Nhân bản bảng giá</button>
+                  <button disabled={isExporting} onClick={() => { setIsMoreActionsOpen(false); handleCopyImageToClipboard(); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm disabled:opacity-50 ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-200 hover:bg-gray-800'}`}><Copy className="h-4 w-4" /> Sao chép ảnh</button>
+                  <button onClick={() => { setIsMoreActionsOpen(false); setIsClientShareModalOpen(true); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-200 hover:bg-gray-800'}`}><Share2 className="h-4 w-4" /> Chia sẻ với khách</button>
+                  <button disabled={isExporting} onClick={() => { setIsMoreActionsOpen(false); handleExportPng(); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm disabled:opacity-50 ${isLight ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-200 hover:bg-gray-800'}`}><Download className="h-4 w-4" /> {isExporting ? 'Đang xuất ảnh...' : 'Tải ảnh PNG'}</button>
+                  <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                  <button onClick={() => { setIsMoreActionsOpen(false); handleResetToDefaults(); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/30"><RotateCcw className="h-4 w-4" /> Khôi phục bảng mẫu</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="px-5 py-4 sm:px-6">
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">BẢNG GIÁ ĐANG QUẢN LÝ</p>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Board Selector Tabs & Quick Open Manager */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full" aria-label="Chọn bảng giá">
             {/* Quick Open Saved Boards Button */}
             <button
               onClick={() => setIsSavedBoardsModalOpen(true)}
@@ -563,7 +607,8 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
               <button
                 key={b.id}
                 onClick={() => setSelectedBoardId(b.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                aria-pressed={selectedBoardId === b.id}
+                className={`min-h-10 flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition whitespace-nowrap cursor-pointer ${
                   selectedBoardId === b.id
                     ? isLight
                       ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
@@ -589,124 +634,8 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
               <span>Tạo mới</span>
             </button>
 
-            {/* AI Assistant Button */}
-            <button
-              onClick={() => {
-                setAiTargetTierId(null);
-                setIsAIModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-sm shadow-blue-500/20 transition cursor-pointer shrink-0"
-              title="Mở Trợ lý AI viết tính năng cho các gói & điều khoản studio"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Viết Gói & Điều khoản</span>
-            </button>
           </div>
 
-          {/* Action buttons: Save, Duplicate, Switch mode & Export Image */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            {/* Quick Save Board Button */}
-            <button
-              onClick={handleSaveCurrentBoard}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition cursor-pointer shrink-0"
-              title="Lưu lại toàn bộ bảng giá này vào hệ thống và Cloud"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>Lưu bảng giá</span>
-            </button>
-
-            {/* Duplicate Board Button */}
-            <button
-              onClick={() => handleDuplicateBoard()}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer shrink-0 ${
-                isLight 
-                  ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100' 
-                  : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
-              }`}
-              title="Tạo bản sao mới từ bảng giá này để chỉnh sửa thành dịch vụ khác"
-            >
-              <Copy className="w-3.5 h-3.5 text-blue-500" />
-              <span className="hidden sm:inline">Nhân bản</span>
-            </button>
-
-            {/* Toggle View / Edit mode */}
-            <div className={`flex items-center p-1 rounded-xl border ${
-              isLight ? 'bg-gray-100 border-gray-200' : 'bg-gray-800 border-gray-700'
-            }`}>
-              <button
-                onClick={() => setViewMode('preview')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  viewMode === 'preview'
-                    ? isLight
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'bg-gray-900 text-white shadow-xs'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Xem & Xuất ảnh</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode('editor')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  viewMode === 'editor'
-                    ? isLight
-                      ? 'bg-white text-blue-600 shadow-xs'
-                      : 'bg-gray-900 text-blue-400 shadow-xs'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Tùy chỉnh giá & nội dung</span>
-              </button>
-            </div>
-
-            {/* Copy image button */}
-            <button
-              onClick={handleCopyImageToClipboard}
-              disabled={isExporting}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                isLight
-                  ? 'bg-gray-50 border-gray-300 text-gray-800 hover:bg-gray-100'
-                  : 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700'
-              }`}
-              title="Sao chép ảnh vào clipboard để dán trực tiếp vào Zalo/Messenger"
-            >
-              <Copy className="w-3.5 h-3.5 text-blue-500" />
-              <span className="hidden sm:inline">Sao chép ảnh</span>
-            </button>
-
-            {/* Xuất link khách xem trực tiếp (/tenkhachhang) */}
-            <button
-              onClick={() => setIsClientShareModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20 transition cursor-pointer shrink-0"
-              title="Xuất đường link trực tiếp cho khách xem (/tenkhachhang) tự động cập nhật sản phẩm & số post còn lại"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Xuất link khách xem (/tenkhachhang)</span>
-            </button>
-
-            {/* Export PNG button */}
-            <button
-              onClick={handleExportPng}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/20 transition cursor-pointer disabled:opacity-50"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{isExporting ? 'Đang tạo ảnh...' : 'Tải ảnh gửi khách'}</span>
-            </button>
-
-            {/* Reset Defaults button */}
-            <button
-              onClick={handleResetToDefaults}
-              className={`p-2 rounded-xl border transition cursor-pointer ${
-                isLight ? 'border-gray-200 text-gray-500 hover:bg-gray-100' : 'border-gray-700 text-gray-400 hover:bg-gray-800'
-              }`}
-              title="Khôi phục lại các bảng giá mẫu chuẩn ban đầu"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </div>
@@ -719,42 +648,18 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
           isLight ? 'bg-white border-gray-200' : 'bg-gray-900 border-gray-800'
         }`}>
           {/* Header Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-gray-200 dark:border-gray-800">
             <div>
-              <h3 className="text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-blue-600" />
                 Cài đặt & Tùy biến bảng giá
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Chỉnh sửa tiêu đề, các gói dịch vụ, giá tiền, màu sắc và điều khoản kèm theo.
               </p>
             </div>
 
             <div className="flex items-center gap-2.5 flex-wrap">
-              {/* Save changes button */}
-              <button
-                onClick={handleSaveCurrentBoard}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition cursor-pointer"
-                title="Lưu lại toàn bộ nội dung vừa sửa vào hệ thống và Cloud"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>Lưu thay đổi</span>
-              </button>
-
-              {/* Duplicate button */}
-              <button
-                onClick={() => handleDuplicateBoard()}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
-                  isLight 
-                    ? 'bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-700' 
-                    : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
-                }`}
-                title="Tạo bản sao mới của bảng giá này"
-              >
-                <Copy className="w-3.5 h-3.5 text-blue-500" />
-                <span>Nhân bản</span>
-              </button>
-
               {/* Delete Board Button */}
               {boards.length > 1 && (
                 <button
@@ -783,7 +688,7 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
           </div>
 
           {/* Form Settings Header */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 rounded-xl border border-gray-200 dark:border-gray-800 p-4 sm:p-5">
             <div className="md:col-span-2 space-y-1.5">
               <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
                 Tiêu đề chính bảng giá (Tên sản phẩm / Dịch vụ):
@@ -832,7 +737,7 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
           </div>
 
           {/* TIERS LIST SETTINGS */}
-          <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="space-y-5 pt-2">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Danh sách các gói dịch vụ ({activeBoard.tiers.length} gói)
@@ -846,7 +751,7 @@ export const ServicePricingManager: React.FC<ServicePricingManagerProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
               {activeBoard.tiers.map((tier, idx) => (
                 <div
                   key={tier.id}

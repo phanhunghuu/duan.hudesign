@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Sidebar, NavTab } from './components/Sidebar';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
+import { Sidebar, NavTab, ContentSubmodule } from './components/Sidebar';
 import { OverviewDashboard } from './components/OverviewDashboard';
-import { ClientDesignManager } from './components/ClientDesignManager';
-import { QuotationGenerator } from './components/QuotationGenerator';
-import { ContentPlanner } from './components/ContentPlanner';
-import { ServicePricingManager } from './components/ServicePricingManager';
-import { AIScriptModal } from './components/AIScriptModal';
+const ClientDesignManager = lazy(() => import('./components/ClientDesignManager').then((module) => ({ default: module.ClientDesignManager })));
+const QuotationGenerator = lazy(() => import('./components/QuotationGenerator').then((module) => ({ default: module.QuotationGenerator })));
+const ContentPlanner = lazy(() => import('./components/ContentPlanner').then((module) => ({ default: module.ContentPlanner })));
+const ServicePricingManager = lazy(() => import('./components/ServicePricingManager').then((module) => ({ default: module.ServicePricingManager })));
+const AIScriptModal = lazy(() => import('./components/AIScriptModal').then((module) => ({ default: module.AIScriptModal })));
 import { Client, DesignItem, Quotation, VideoContent, StudioProfile, ServicePricingBoard } from './types';
 import {
   loadClients,
@@ -145,6 +145,33 @@ export default function App() {
     } catch (e) {}
   };
 
+  const [activeContentSubmodule, setActiveContentSubmodule] = useState<ContentSubmodule>(() => {
+    try {
+      return localStorage.getItem('hudiff_content_submodule') === 'video_scripts'
+        ? 'video_scripts'
+        : 'fanpage_weekly';
+    } catch (e) {
+      return 'fanpage_weekly';
+    }
+  });
+  const selectContentSubmodule = (submodule: ContentSubmodule) => {
+    setActiveContentSubmodule(submodule);
+    try {
+      localStorage.setItem('hudiff_content_submodule', submodule);
+    } catch (e) {}
+  };
+
+  const [createRequest, setCreateRequest] = useState<{ id: number; type: 'client' | 'design' } | null>(null);
+  const openCreateForm = (type: 'client' | 'design') => {
+    setQuotationClientId('');
+    setCreateRequest((previous) => ({ id: (previous?.id || 0) + 1, type }));
+    setActiveTab('clients_designs');
+  };
+  const openVideoScripts = () => {
+    selectContentSubmodule('video_scripts');
+    setActiveTab('content_planner');
+  };
+
   // Preselected client when jumping from Client/Design manager to Quotation Generator
   const [quotationClientId, setQuotationClientId] = useState<string>('');
 
@@ -155,7 +182,7 @@ export default function App() {
   const [contents, setContents] = useState<VideoContent[]>(() => loadContents() || []);
   const [pricingBoards, setPricingBoards] = useState<ServicePricingBoard[]>(() => loadPricingBoards() || []);
   const [studioProfile, setStudioProfile] = useState<StudioProfile>(() => loadStudioProfile() || initialStudioProfile);
-  const [isCloudReady, setIsCloudReady] = useState<boolean>(false);
+  const [cloudStatus, setCloudStatus] = useState<'connecting' | 'connected' | 'offline'>('connecting');
 
   // Google Drive state
   const [driveUser, setDriveUser] = useState<any>(null);
@@ -193,8 +220,8 @@ export default function App() {
     let isMounted = true;
 
     // Seed data on initial connection if cloud database is empty
-    seedCloudIfEmpty().then(() => {
-      if (isMounted) setIsCloudReady(true);
+    seedCloudIfEmpty().then((isReady) => {
+      if (isMounted) setCloudStatus(isReady ? 'connected' : 'offline');
     });
 
     // Realtime subscribers
@@ -498,17 +525,19 @@ export default function App() {
       <div className={`min-h-screen transition-colors duration-200 ${!isLight ? 'dark' : ''} ${
         isLight ? 'bg-gray-100 text-gray-900' : 'bg-gray-950 text-gray-100'
       }`}>
-        <ClientPortalView
-          client={matchedClient}
-          slug={routeClientSlug}
-          designItems={designItems}
-          quotations={quotations}
-          pricingBoards={pricingBoards}
-          studioProfile={studioProfile}
-          onBackToAdmin={handleBackToAdmin}
-          onRefreshData={handleManualSyncCloud}
-          isLight={isLight}
-        />
+        <Suspense fallback={<div className="p-8 text-center text-sm text-neutral-500">Đang tải cổng khách hàng...</div>}>
+          <ClientPortalView
+            client={matchedClient}
+            slug={routeClientSlug}
+            designItems={designItems}
+            quotations={quotations}
+            pricingBoards={pricingBoards}
+            studioProfile={studioProfile}
+            onBackToAdmin={handleBackToAdmin}
+            onRefreshData={handleManualSyncCloud}
+            isLight={isLight}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -521,22 +550,22 @@ export default function App() {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        activeContentSubmodule={activeContentSubmodule}
+        onSelectContentSubmodule={(submodule) => {
+          selectContentSubmodule(submodule);
+          setActiveTab('content_planner');
+        }}
         theme={isLight ? 'light' : 'dark'}
         setTheme={setTheme}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
-        onOpenNewClient={() => {
-          setQuotationClientId('');
-          setActiveTab('clients_designs');
-        }}
-        onOpenNewDesign={() => {
-          setActiveTab('clients_designs');
-        }}
+        onOpenNewClient={() => openCreateForm('client')}
+        onOpenNewDesign={() => openCreateForm('design')}
         onOpenAIScript={() => setIsAIScriptModalOpen(true)}
         onOpenNewQuote={() => {
           setQuotationClientId('');
           setActiveTab('quotations');
         }}
-        isCloudSynced={isCloudReady}
+        cloudStatus={cloudStatus}
         studioName={studioProfile.name || 'HỦ DESIGN'}
         driveUser={driveUser}
         onConnectDrive={handleConnectGoogleDrive}
@@ -548,6 +577,7 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <Suspense fallback={<div className="flex min-h-48 items-center justify-center gap-2 text-sm text-neutral-500"><Loader2 className="h-4 w-4 animate-spin" /> Đang tải màn hình...</div>}>
         {activeTab === 'overview' && (
           <OverviewDashboard
             clients={clients}
@@ -555,16 +585,8 @@ export default function App() {
             quotations={quotations}
             videos={contents}
             onNavigate={(tab) => setActiveTab(tab)}
-            onOpenNewClient={() => {
-              setQuotationClientId('');
-              setActiveTab('clients_designs');
-            }}
-            onOpenNewDesign={() => setActiveTab('clients_designs')}
-            onOpenAIScript={() => setIsAIScriptModalOpen(true)}
-            onOpenNewQuote={() => {
-              setQuotationClientId('');
-              setActiveTab('quotations');
-            }}
+            onOpenNewDesign={() => openCreateForm('design')}
+            onOpenVideoScripts={openVideoScripts}
             onSelectClient={(clientId) => {
               setQuotationClientId(clientId);
               setActiveTab('clients_designs');
@@ -585,6 +607,7 @@ export default function App() {
             onDeleteDesignItem={handleDeleteDesignItem}
             onCreateQuotationForClient={handleCreateQuotationForClient}
             selectedClientIdProp={quotationClientId}
+            createRequest={createRequest}
             onNavigateToClientPortal={handleNavigateToPortal}
             isLight={isLight}
           />
@@ -626,21 +649,28 @@ export default function App() {
             onDeleteContent={handleDeleteContent}
             studioProfile={studioProfile}
             isLight={isLight}
+            activeSubModule={activeContentSubmodule}
+            onActiveSubModuleChange={selectContentSubmodule}
           />
         )}
+        </Suspense>
       </main>
     </div>
 
       {/* Global AI Script Modal */}
-      <AIScriptModal
-        isOpen={isAIScriptModalOpen}
-        onClose={() => setIsAIScriptModalOpen(false)}
-        onSaveContent={(newContent) => {
-          handleAddContent(newContent);
-          setActiveTab('content_planner');
-        }}
-        isLight={isLight}
-      />
+      {isAIScriptModalOpen && (
+        <Suspense fallback={<div className="fixed inset-0 z-50 grid place-items-center bg-black/40 text-sm text-white">Đang mở trợ lý AI...</div>}>
+          <AIScriptModal
+            isOpen={isAIScriptModalOpen}
+            onClose={() => setIsAIScriptModalOpen(false)}
+            onSaveContent={(newContent) => {
+              handleAddContent(newContent);
+              setActiveTab('content_planner');
+            }}
+            isLight={isLight}
+          />
+        </Suspense>
+      )}
 
       {/* Settings & Studio Profile Modal */}
       {isSettingsModalOpen && (

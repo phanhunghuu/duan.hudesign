@@ -95,6 +95,10 @@
     color: #2563eb !important;
   }
 
+  .quotation-printable .brand-accent {
+    color: #B4532C !important;
+  }
+
   .quotation-printable .bg-blue-500,
   .quotation-printable .bg-blue-600 {
     background-color: #2563eb !important;

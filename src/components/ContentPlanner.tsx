@@ -26,6 +26,7 @@ import {
   CalendarDays,
   Share2
 } from 'lucide-react';
+import { ContentSubmodule } from './Sidebar';
 
 interface ContentPlannerProps {
   contents: VideoContent[];
@@ -34,6 +35,8 @@ interface ContentPlannerProps {
   onDeleteContent: (contentId: string) => void;
   studioProfile?: StudioProfile;
   isLight: boolean;
+  activeSubModule: ContentSubmodule;
+  onActiveSubModuleChange: (submodule: ContentSubmodule) => void;
 }
 
 const KANBAN_COLUMNS: { id: ContentStatus; label: string; dotColor: string }[] = [
@@ -51,8 +54,9 @@ export const ContentPlanner: React.FC<ContentPlannerProps> = ({
   onDeleteContent,
   studioProfile,
   isLight,
+  activeSubModule,
+  onActiveSubModuleChange,
 }) => {
-  const [activeSubModule, setActiveSubModule] = useState<'fanpage_weekly' | 'video_scripts'>('fanpage_weekly');
   const safeContents = contents || [];
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
@@ -162,7 +166,7 @@ export const ContentPlanner: React.FC<ContentPlannerProps> = ({
       }`}>
         <button
           type="button"
-          onClick={() => setActiveSubModule('fanpage_weekly')}
+          onClick={() => onActiveSubModuleChange('fanpage_weekly')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeSubModule === 'fanpage_weekly'
               ? 'bg-blue-600 text-white shadow-md'
@@ -182,7 +186,7 @@ export const ContentPlanner: React.FC<ContentPlannerProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveSubModule('video_scripts')}
+          onClick={() => onActiveSubModuleChange('video_scripts')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeSubModule === 'video_scripts'
               ? 'bg-blue-600 text-white shadow-md'

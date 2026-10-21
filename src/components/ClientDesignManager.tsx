@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Client, DesignItem, DesignImage, DesignStatus, ProjectStatus, PriorityLevel, DesignCategory } from '../types';
-import { formatVND, formatDate, getDesignStatusBadge, getPriorityBadge, getProjectStatusBadge, getRelativeTime } from '../utils/formatters';
+import { formatVND, formatDate, getPriorityBadge, getProjectStatusBadge, getRelativeTime } from '../utils/formatters';
 import { 
   Users, 
   Palette, 
@@ -9,7 +9,6 @@ import {
   Filter, 
   Calendar, 
   ExternalLink, 
-  Image as ImageIcon, 
   CheckCircle2, 
   Clock, 
   Edit3, 
@@ -57,6 +56,7 @@ interface ClientDesignManagerProps {
   onDeleteDesignItem: (itemId: string) => void;
   onCreateQuotationForClient: (clientId: string) => void;
   selectedClientIdProp?: string;
+  createRequest?: { id: number; type: 'client' | 'design' } | null;
   onNavigateToClientPortal?: (slug: string) => void;
   isLight: boolean;
 }
@@ -83,6 +83,7 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
   onDeleteDesignItem,
   onCreateQuotationForClient,
   selectedClientIdProp,
+  createRequest,
   onNavigateToClientPortal,
   isLight,
 }) => {
@@ -98,6 +99,9 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [clientStatusFilter, setClientStatusFilter] = useState<string>('all');
   const [designStatusFilter, setDesignStatusFilter] = useState<string>('all');
+  const [isMobileDirectoryOpen, setIsMobileDirectoryOpen] = useState(() =>
+    typeof window === 'undefined' || window.matchMedia('(min-width: 1024px)').matches
+  );
 
   // Modals state
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -354,6 +358,12 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
 
   // Current active client
   const activeClient = safeClients.find((c) => c?.id === selectedClientId) || safeClients[0];
+  const handleSelectClient = (clientId: string) => {
+    setSelectedClientId(clientId);
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      setIsMobileDirectoryOpen(false);
+    }
+  };
 
   // Current client's design items
   const currentClientItems = safeDesignItems.filter((d) => d && d.clientId === activeClient?.id);
@@ -444,6 +454,12 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
     });
     setIsDesignModalOpen(true);
   };
+
+  useEffect(() => {
+    if (!createRequest) return;
+    if (createRequest.type === 'client') handleOpenAddClient();
+    else handleOpenAddDesign();
+  }, [createRequest?.id]);
 
   const handleOpenEditDesign = (item: DesignItem) => {
     setEditingDesignItem(item);
@@ -559,54 +575,82 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+      <div className="space-y-5">
       {/* Top Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
-            Quản lý Thiết kế & Khách hàng
+            Khách hàng & thiết kế
           </h2>
           <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            Theo dõi kế hoạch thiết kế (Design Plan), brief, moodboard và xuất báo giá cho từng đối tác
+            Quản lý khách hàng, đầu việc thiết kế và tiến độ dự án.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={handleOpenAddClient}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
-              isLight 
-                ? 'bg-white hover:bg-neutral-50 text-neutral-850 border-neutral-300/80 shadow-2xs' 
-                : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-100 border-neutral-700'
-            }`}
-          >
-            + Khách hàng mới
-          </button>
-          <button
             onClick={handleOpenAddDesign}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-neutral-900 hover:bg-black text-white rounded-xl shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-neutral-900 hover:bg-black text-white shadow-2xs transition cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
           >
-            + Thêm việc thiết kế
+            <Plus className="w-4 h-4" />
+            Thêm việc thiết kế
           </button>
         </div>
       </div>
 
       {/* Main Layout: Left Sidebar Clients List + Right Main Design Plan */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (4 cols): Clients Directory */}
-        <div className={`lg:col-span-4 rounded-2xl border p-4 sm:p-5 space-y-4 ${
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Client directory */}
+        <aside className={`lg:col-span-4 xl:col-span-4 lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:min-h-0 lg:overflow-hidden flex flex-col rounded-xl border p-4 space-y-4 ${
           isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-900 border-neutral-800'
         }`}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="whitespace-nowrap text-base font-bold text-neutral-900 dark:text-white">Danh bạ khách hàng</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                {isMobileDirectoryOpen
+                  ? `${filteredClients.length} / ${safeClients.length} khách hàng`
+                  : activeClient?.company || activeClient?.name}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleOpenAddClient}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                isLight
+                  ? 'bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-200'
+                  : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border-neutral-700'
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="sr-only">Thêm khách hàng</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMobileDirectoryOpen((isOpen) => !isOpen)}
+              aria-expanded={isMobileDirectoryOpen}
+              className={`lg:hidden px-2.5 py-2 rounded-lg text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                isLight
+                  ? 'text-neutral-700 hover:bg-neutral-100'
+                  : 'text-neutral-200 hover:bg-neutral-800'
+              }`}
+            >
+              {isMobileDirectoryOpen ? 'Thu gọn' : 'Đổi khách'}
+            </button>
+          </div>
+
+          <div className={`${isMobileDirectoryOpen ? 'flex' : 'hidden lg:flex'} min-h-0 flex-1 flex-col space-y-4`}>
           {/* Search & Status Filter for Clients */}
           <div className="space-y-3">
             <div className="relative">
               <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Tìm khách hàng hoặc công ty..."
+                placeholder="Tìm khách hàng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs border transition focus:outline-hidden ${
+                aria-label="Tìm theo tên, công ty hoặc email"
+                className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border transition focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   isLight 
                     ? 'bg-white border-neutral-200/90 focus:border-neutral-400 text-neutral-900 placeholder:text-neutral-400' 
                     : 'bg-neutral-950 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-600'
@@ -615,18 +659,19 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
             </div>
 
             {/* Status Pills Filter */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <div role="group" aria-label="Lọc khách hàng theo trạng thái" className="flex flex-wrap items-center gap-1.5 pb-1 text-xs">
               {[
-                { id: 'all', label: 'Tất cả' },
-                { id: 'active', label: 'Đang hợp tác' },
-                { id: 'pending', label: 'Chờ' },
-                { id: 'completed', label: 'Xong' },
+                { id: 'all', label: 'Tất cả', count: safeClients.length },
+                { id: 'active', label: 'Đang hợp tác', count: safeClients.filter((client) => client.status === 'active').length },
+                { id: 'pending', label: 'Đang chờ', count: safeClients.filter((client) => client.status === 'pending').length },
+                { id: 'completed', label: 'Hoàn tất', count: safeClients.filter((client) => client.status === 'completed').length },
               ].map((tab) => {
                 const isActive = clientStatusFilter === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setClientStatusFilter(tab.id)}
+                    aria-pressed={isActive}
                     className={`px-3.5 py-1 rounded-full text-xs font-medium transition whitespace-nowrap cursor-pointer ${
                       isActive
                         ? 'bg-neutral-900 text-white shadow-2xs'
@@ -636,6 +681,7 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                     }`}
                   >
                     {tab.label}
+                    <span className={`ml-1.5 ${isActive ? 'opacity-80' : 'opacity-60'}`}>{tab.count}</span>
                   </button>
                 );
               })}
@@ -643,7 +689,7 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
           </div>
 
           {/* Client List */}
-          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 space-y-2 max-h-[60vh] overflow-y-auto overscroll-contain pr-1 lg:max-h-none">
             {filteredClients.length === 0 ? (
               <div className="text-center py-8 text-gray-400 text-xs">
                 Không tìm thấy khách hàng phù hợp.
@@ -658,19 +704,28 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                 return (
                   <div
                     key={client.id}
-                    onClick={() => setSelectedClientId(client.id)}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative group ${
+                    onClick={() => handleSelectClient(client.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleSelectClient(client.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-current={isSelected ? 'true' : undefined}
+                    className={`p-3 rounded-xl border transition-colors cursor-pointer relative group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                       isSelected
                         ? isLight
-                          ? 'bg-[#fffdfb] border-[#b4532c]/80 shadow-2xs ring-1 ring-[#b4532c]/20'
-                          : 'bg-neutral-800/80 border-[#b4532c]/80 shadow-md ring-1 ring-[#b4532c]/30'
+                          ? 'bg-orange-50/60 border-[#b4532c]/50 ring-1 ring-[#b4532c]/10'
+                          : 'bg-neutral-800/80 border-[#b4532c]/60 ring-1 ring-[#b4532c]/20'
                         : isLight
-                        ? 'bg-white hover:bg-neutral-50/80 border-neutral-200/80 shadow-2xs'
+                        ? 'bg-white hover:bg-neutral-50 border-neutral-200/80'
                         : 'bg-neutral-900 hover:bg-neutral-800/70 border-neutral-800'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="shrink-0">
                         {client.avatar ? (
                           <img
                             src={client.avatar}
@@ -683,15 +738,17 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                             {client.company ? client.company.slice(0, 2).toUpperCase() : client.name.slice(0, 2).toUpperCase()}
                           </div>
                         )}
-                        <div className="min-w-0">
-                          <h4 className="text-xs sm:text-sm font-bold truncate text-neutral-900 dark:text-neutral-100 group-hover:text-black dark:group-hover:text-white transition">
-                            {client.company}
-                          </h4>
-                          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate mt-0.5">{client.name}</p>
-                        </div>
                       </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold leading-snug text-neutral-900 dark:text-neutral-100 group-hover:text-black dark:group-hover:text-white transition break-words line-clamp-2">
+                          {client.company}
+                        </h4>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 break-words line-clamp-2">{client.name}</p>
+                      </div>
+                    </div>
 
-                      <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${
+                    <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
                         client.status === 'active'
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80'
                           : client.status === 'completed'
@@ -700,11 +757,8 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                       }`}>
                         {statusBadge.label}
                       </span>
-                    </div>
-
-                    <div className="mt-2.5 pt-2 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400">
-                      <span>
-                        <strong className="text-neutral-800 dark:text-neutral-200 font-semibold">{clientItems.length}</strong> sản phẩm thiết kế
+                      <span className="whitespace-nowrap">
+                        <strong className="text-neutral-800 dark:text-neutral-200 font-semibold">{clientItems.length}</strong> việc
                       </span>
                       {activeCount > 0 && (
                         <span className="text-[#b4532c] dark:text-amber-400 font-semibold">
@@ -717,13 +771,13 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
               })
             )}
           </div>
-        </div>
+          </div>
+        </aside>
 
-        {/* Right Column (8 cols): Selected Client's Detail & Design Plan */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Selected client workspace */}
+        <div className="lg:col-span-8 xl:col-span-8 min-w-0 space-y-5">
           {activeClient ? (
             <>
-              {/* Active Client Info Banner */}
               <div className={`p-5 sm:p-6 rounded-2xl border transition ${
                 isLight ? 'bg-white border-neutral-200/90 shadow-2xs' : 'bg-neutral-900 border-neutral-800'
               }`}>
@@ -746,7 +800,7 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                         <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
                           {activeClient.company}
                         </h3>
-                        <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full ${
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                           activeClient.status === 'active'
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80'
                             : activeClient.status === 'completed'
@@ -756,9 +810,11 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                           {getProjectStatusBadge(activeClient.status).label}
                         </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                        Liên hệ: <strong className="text-neutral-800 dark:text-neutral-200">{activeClient.name}</strong> • {activeClient.phone || 'Chưa có SĐT'} {activeClient.email && `• ${activeClient.email}`}
-                      </p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
+                        <span>Liên hệ <strong className="font-semibold text-neutral-800 dark:text-neutral-200">{activeClient.name}</strong></span>
+                        {activeClient.phone && <span>{activeClient.phone}</span>}
+                        {activeClient.email && <span className="break-all">{activeClient.email}</span>}
+                      </div>
                       {activeClient.address && (
                         <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5 truncate max-w-xl">
                           📍 {activeClient.address}
@@ -771,21 +827,26 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                   <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
                     <button
                       onClick={() => setIsShareModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-neutral-900 hover:bg-black text-white shadow-2xs transition cursor-pointer"
+                      className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                        isLight
+                          ? 'bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-200'
+                          : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border-neutral-700'
+                      }`}
                       title="Xuất đường link khách xem trực tiếp (/tenkhachhang)"
                     >
                       <Share2 className="w-3.5 h-3.5" />
-                      <span>Link Khách Xem (/{activeClient.slug || getClientSlug(activeClient)})</span>
+                      <span>Chia sẻ portal</span>
                     </button>
                     <button
                       onClick={() => onCreateQuotationForClient(activeClient.id)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#b4532c] hover:bg-[#9a4320] text-white shadow-2xs transition cursor-pointer"
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-[#b4532c] hover:bg-[#9a4320] text-white shadow-2xs transition cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                       title="Lập bảng thống kê & Báo giá cho khách này"
                     >
                       Tạo Báo giá
                     </button>
                     <button
                       onClick={() => handleOpenEditClient(activeClient)}
+                      aria-label="Chỉnh sửa thông tin khách hàng"
                       className={`p-2 rounded-xl border text-xs font-medium transition cursor-pointer ${
                         isLight 
                           ? 'border-neutral-200/90 bg-white hover:bg-neutral-50 text-neutral-700' 
@@ -798,12 +859,13 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                   </div>
                 </div>
 
-                {/* Package Quota Tracker Bar */}
+                {/* Monthly package usage only applies to clients with a package. */}
                 {(() => {
                   const quotaStats = calculatePackageQuota(activeClient, safeDesignItems);
+                  if (!quotaStats.hasPackage) return null;
                   return (
-                    <div className={`mt-4 p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                      isLight ? 'bg-[#fffdfb] border-orange-200/60' : 'bg-neutral-950/60 border-neutral-800'
+                    <div className={`mt-4 p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                      isLight ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-950/60 border-neutral-800'
                     }`}>
                       <div className="flex items-center gap-3">
                         <div>
@@ -811,8 +873,14 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                             <span className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white">
                               {quotaStats.packageName} ({quotaStats.targetMonthLabel})
                             </span>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200/80">
-                              CÒN LẠI: {quotaStats.remainingQuota} / {quotaStats.totalQuota} POST
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              quotaStats.remainingQuota < 0
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200/80'
+                                : 'bg-white text-neutral-700 border border-neutral-200'
+                            }`}>
+                              {quotaStats.remainingQuota < 0
+                                ? `Vượt ${Math.abs(quotaStats.remainingQuota)} post`
+                                : `Còn ${quotaStats.remainingQuota} / ${quotaStats.totalQuota} post`}
                             </span>
                           </div>
                           <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
@@ -854,14 +922,14 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
               </div>
 
               {/* Design Plan (Kế hoạch thiết kế) Header & Filter */}
-              <div className="space-y-4">
+              <div className="space-y-4 pt-5 border-t border-neutral-200 dark:border-neutral-800">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                      Kế hoạch thiết kế ({currentClientItems.length} sản phẩm)
+                    <h3 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
+                      Việc thiết kế <span className="ml-1 text-sm font-medium text-neutral-500">{currentClientItems.length}</span>
                     </h3>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                      Danh mục ấn phẩm, brief, moodboard và tiến độ hoàn thiện
+                      Brief, file và tiến độ của {activeClient.company || activeClient.name}
                     </p>
                   </div>
 
@@ -911,274 +979,153 @@ export const ClientDesignManager: React.FC<ClientDesignManagerProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-3.5">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                     {filteredDesignItems.map((item) => {
-                      const statusBadge = getDesignStatusBadge(item.status);
                       const priorityBadge = getPriorityBadge(item.priority);
                       const relativeTime = getRelativeTime(item.deadline);
+                      const itemImages = item.demoImages?.length
+                        ? item.demoImages
+                        : item.demoImageUrl
+                        ? [{ id: 'legacy-1', url: item.demoImageUrl, driveFileUrl: item.driveFileUrl, driveThumbnailUrl: item.driveThumbnailUrl, name: 'Ảnh demo' }]
+                        : [];
+                      const moodboardUrls = item.moodboardUrls || [];
+                      const hasAssets = itemImages.length > 0 || moodboardUrls.length > 0 || item.driveFolderUrl || item.clientFolderUrl || item.driveFileUrl;
 
                       return (
-                        <div
+                        <article
                           key={item.id}
-                          className={`p-5 rounded-2xl border transition-all ${
+                          className={`flex min-h-[260px] flex-col rounded-xl border p-4 transition-colors ${
                             isLight 
-                              ? 'bg-white hover:border-neutral-300 border-neutral-200/90 shadow-2xs' 
+                              ? 'bg-white hover:border-neutral-300 border-neutral-200'
                               : 'bg-neutral-900 hover:bg-neutral-850 border-neutral-800'
                           }`}
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                            <div className="space-y-1.5 flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium ${
-                                  item.priority === 'urgent'
-                                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                    : item.priority === 'high'
-                                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                    : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'
-                                }`}>
-                                  {priorityBadge.label}
-                                </span>
-                                <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
-                                  isLight ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-800 text-neutral-300'
-                                }`}>
-                                  {item.category}
-                                </span>
-                                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300 flex items-center gap-1">
-                                  Tính {item.postQuota || 1} post
-                                </span>
-                                <span className="text-xs sm:text-sm font-bold text-[#b4532c]">
-                                  {formatVND(item.unitPrice)} / {item.unit}
-                                </span>
-                              </div>
-
-                              <h4 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white mt-1">
-                                {item.title}
-                              </h4>
-
-                              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
-                                {item.brief || 'Chưa có ghi chú mô tả'}
-                              </p>
-                            </div>
-
-                            {/* Status Quick Switch Dropdown */}
-                            <div className="flex items-center gap-2 self-end sm:self-start">
-                              <select
-                                value={item.status}
-                                onChange={(e) => handleQuickStatusChange(item, e.target.value as DesignStatus)}
-                                className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition cursor-pointer focus:outline-hidden ${
-                                  item.status === 'done'
-                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                    : item.status === 'review'
-                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                    : item.status === 'in_progress'
-                                    ? 'bg-blue-50 text-blue-800 border-blue-200'
-                                    : isLight
-                                    ? 'bg-white text-neutral-700 border-neutral-200/90'
-                                    : 'bg-neutral-800 text-neutral-200 border-neutral-700'
-                                }`}
-                              >
-                                <option value="todo">Chưa làm</option>
-                                <option value="in_progress">Đang làm</option>
-                                <option value="review">Chờ duyệt</option>
-                                <option value="done">Hoàn thành</option>
-                              </select>
-
+                          <div className="flex items-start justify-between gap-3">
+                            <h4 className="min-w-0 flex-1 text-base font-semibold leading-snug text-neutral-900 dark:text-white line-clamp-2">
+                              {item.title}
+                            </h4>
+                            <div className="flex shrink-0 items-center gap-1">
                               <button
                                 onClick={() => handleOpenEditDesign(item)}
-                                className={`p-2 rounded-xl border text-xs transition cursor-pointer ${
-                                  isLight ? 'border-neutral-200/90 bg-white hover:bg-neutral-50 text-neutral-700' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-750 text-neutral-300'
-                                }`}
-                                title="Chỉnh sửa"
+                                aria-label={`Chỉnh sửa ${item.title}`}
+                                className={`rounded-md p-1.5 transition hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:hover:bg-neutral-800 ${isLight ? 'text-neutral-500' : 'text-neutral-400'}`}
                               >
-                                <Edit3 className="w-3.5 h-3.5" />
+                                <Edit3 className="h-4 w-4" />
                               </button>
-
                               <button
                                 onClick={() => onDeleteDesignItem(item.id)}
-                                className="p-2 rounded-xl border border-neutral-200/90 dark:border-neutral-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-neutral-400 hover:text-rose-600 transition cursor-pointer"
-                                title="Xóa hạng mục"
+                                aria-label={`Xóa ${item.title}`}
+                                className="rounded-md p-1.5 text-neutral-400 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-500 dark:hover:bg-rose-950/30"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </div>
 
-                          {/* Demo Images Gallery & Subfolder Google Drive preview */}
-                          {(() => {
-                            const itemImages = (item.demoImages && item.demoImages.length > 0)
-                              ? item.demoImages
-                              : (item.demoImageUrl ? [{ id: 'legacy-1', url: item.demoImageUrl, driveFileUrl: item.driveFileUrl, driveThumbnailUrl: item.driveThumbnailUrl, name: 'Ảnh demo' }] : []);
-                            
-                            const hasImagesOrDrive = itemImages.length > 0 || item.driveFolderUrl || item.driveFileUrl;
-                            if (!hasImagesOrDrive) return null;
+                          <p className="mt-2 min-h-10 text-sm leading-5 text-neutral-600 dark:text-neutral-400 line-clamp-2">
+                            {item.brief || 'Chưa có mô tả brief.'}
+                          </p>
 
-                            return (
-                              <div className={`mt-3 p-3.5 rounded-xl border flex flex-col gap-3 ${
-                                isLight 
-                                  ? 'bg-[#f8f9fa] border-neutral-200/80 text-neutral-800' 
-                                  : 'bg-neutral-950/60 border-neutral-800 text-neutral-200'
-                              }`}>
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
-                                      Bộ ảnh thiết kế ({itemImages.length} hình)
-                                    </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span className={`rounded-md px-2 py-1 text-xs font-medium ${
+                              item.priority === 'urgent'
+                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                                : item.priority === 'high'
+                                ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'
+                            }`}>
+                              {priorityBadge.label}
+                            </span>
+                            <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                              {item.category}
+                            </span>
+                          </div>
 
-                                    {item.driveFolderUrl && (
-                                      <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                                        Thư mục riêng: {item.title}
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Quick links to Google Drive subfolder & client folder */}
-                                  <div className="flex items-center gap-2 flex-wrap shrink-0">
-                                    {item.driveFolderUrl && (
-                                      <a
-                                        href={item.driveFolderUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-neutral-900 hover:bg-black text-white flex items-center gap-1.5 shadow-2xs transition"
-                                        title="Mở thư mục con của bài thiết kế này trên Google Drive"
-                                      >
-                                        <FolderOpen className="w-3.5 h-3.5" />
-                                        <span>Thư mục bài này</span>
-                                      </a>
-                                    )}
-
-                                    {item.clientFolderUrl && (
-                                      <a
-                                        href={item.clientFolderUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border flex items-center gap-1 transition ${
-                                          isLight 
-                                            ? 'bg-white hover:bg-neutral-50 text-neutral-700 border-neutral-200/90' 
-                                            : 'bg-neutral-800 hover:bg-neutral-750 text-neutral-200 border-neutral-700'
-                                        }`}
-                                        title="Mở thư mục gốc của khách hàng trên Google Drive"
-                                      >
-                                        <Folder className="w-3 h-3 text-amber-500" />
-                                        <span className="hidden sm:inline">Thư mục khách</span>
-                                      </a>
-                                    )}
-
-                                    {item.driveFileUrl && !item.driveFolderUrl && (
-                                      <a
-                                        href={item.driveFileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 shadow-2xs transition"
-                                      >
-                                        <ExternalLink className="w-3 h-3" />
-                                        Mở Drive
-                                      </a>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Images Thumbnail Strip */}
-                                {itemImages.length > 0 && (
-                                  <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
-                                    {itemImages.slice(0, 5).map((img, idx) => (
-                                      <div
-                                        key={img.id || idx}
-                                        onClick={() => setPreviewModalImage({ url: img.url, name: img.name || `${item.title} - Hình ${idx + 1}`, driveUrl: img.driveFileUrl })}
-                                        className="relative group/thumb cursor-pointer shrink-0 rounded-lg overflow-hidden border border-blue-200 dark:border-blue-800 hover:border-blue-500 transition shadow-2xs"
-                                        title={img.name || `Hình ${idx + 1} (Bấm để xem phóng to)`}
-                                      >
-                                        <img
-                                          src={img.url}
-                                          alt={img.name || `Hình ${idx + 1}`}
-                                          referrerPolicy="no-referrer"
-                                          className="w-14 h-14 object-cover group-hover/thumb:scale-105 transition duration-200"
-                                        />
-                                        {idx === 0 && (
-                                          <span className="absolute bottom-0.5 left-0.5 px-1 py-0.2 rounded bg-black/70 text-white text-[9px] font-bold">
-                                            Chính
-                                          </span>
-                                        )}
-                                        <div className="absolute inset-0 bg-blue-600/20 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
-                                          <Maximize2 className="w-3.5 h-3.5 drop-shadow" />
-                                        </div>
-                                      </div>
-                                    ))}
-
-                                    {itemImages.length > 5 && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setViewingBriefItem(item)}
-                                        className={`w-14 h-14 rounded-lg border flex flex-col items-center justify-center font-bold text-xs shrink-0 transition ${
-                                          isLight 
-                                            ? 'bg-blue-100/70 hover:bg-blue-200/80 text-blue-800 border-blue-200' 
-                                            : 'bg-blue-900/30 hover:bg-blue-900/60 text-blue-300 border-blue-800'
-                                        }`}
-                                      >
-                                        <span>+{itemImages.length - 5}</span>
-                                        <span className="text-[9px] font-normal">ảnh nữa</span>
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-
-                          {/* Moodboard & Deliverables Snippet */}
-                          <div className="mt-4 pt-3.5 border-t border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-                            <div className="flex items-center gap-3">
-                              {item.moodboardUrls && item.moodboardUrls.length > 0 ? (
-                                <div className="flex items-center gap-1.5">
-                                  <ImageIcon className="w-3.5 h-3.5 text-neutral-500" />
-                                  <span className="text-neutral-500 dark:text-neutral-400 font-medium">Moodboard:</span>
-                                  <div className="flex items-center -space-x-2">
-                                    {item.moodboardUrls.slice(0, 3).map((url, i) => (
-                                      <a
-                                        key={i}
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-block relative group/img"
-                                      >
-                                        <img
-                                          src={url}
-                                          alt="Moodboard"
-                                          referrerPolicy="no-referrer"
-                                          className="w-6 h-6 rounded-md object-cover border border-neutral-200 dark:border-neutral-700 hover:scale-125 transition z-10 hover:z-20"
-                                        />
-                                      </a>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-neutral-400 text-[11px]">Chưa đính kèm moodboard</span>
-                              )}
-
-                              {item.clientFeedback && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
-                                  <MessageSquare className="w-3 h-3" />
-                                  Có phản hồi mới
-                                </span>
-                              )}
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+                            <div className="flex min-w-0 items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300">
+                              <Calendar className="h-4 w-4 shrink-0 text-neutral-400" />
+                              <span>{formatDate(item.deadline)}</span>
+                              <span className={relativeTime.includes('Quá hạn') ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-neutral-500'}>
+                                {relativeTime}
+                              </span>
                             </div>
+                            <select
+                              value={item.status}
+                              onChange={(e) => handleQuickStatusChange(item, e.target.value as DesignStatus)}
+                              aria-label={`Trạng thái của ${item.title}`}
+                              className={`max-w-36 rounded-md border px-2 py-1.5 text-xs font-semibold transition cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${
+                                item.status === 'done'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  : item.status === 'review'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                  : item.status === 'in_progress'
+                                  ? 'bg-blue-50 text-blue-800 border-blue-200'
+                                  : isLight
+                                  ? 'bg-white text-neutral-700 border-neutral-200'
+                                  : 'bg-neutral-800 text-neutral-200 border-neutral-700'
+                              }`}
+                            >
+                              <option value="todo">Chưa làm</option>
+                              <option value="in_progress">Đang làm</option>
+                              <option value="review">Chờ duyệt</option>
+                              <option value="done">Hoàn thành</option>
+                            </select>
+                          </div>
 
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
-                                <Calendar className="w-3.5 h-3.5 text-neutral-400" />
-                                <span>Hạn: <strong className="text-neutral-800 dark:text-neutral-200">{formatDate(item.deadline)}</strong></span>
-                                <span className="text-[11px] text-[#b4532c] dark:text-amber-400 font-medium">({relativeTime})</span>
+                          <div className="mt-auto pt-3">
+                            <div className="flex items-center justify-between gap-3 text-xs">
+                              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-neutral-600 dark:text-neutral-300">
+                                <span className="font-semibold text-neutral-900 dark:text-white">{formatVND(item.unitPrice)} <span className="font-normal text-neutral-500">/ {item.unit}</span></span>
+                                <span>{item.postQuota || 1} post</span>
+                                {item.clientFeedback && <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300"><MessageSquare className="h-3.5 w-3.5" /> Phản hồi mới</span>}
                               </div>
-
-                              <button
-                                onClick={() => setViewingBriefItem(item)}
-                                className="text-xs font-semibold text-neutral-800 hover:text-black dark:text-neutral-200 dark:hover:text-white flex items-center gap-1 transition cursor-pointer"
-                              >
-                                <span>Chi tiết Brief</span>
-                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              <button type="button" onClick={() => setViewingBriefItem(item)} className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 font-semibold text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                                Xem brief <ArrowUpRight className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </div>
-                        </div>
+
+                          {hasAssets && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+                              {itemImages.slice(0, 4).map((img, idx) => (
+                                <button
+                                  key={img.id || idx}
+                                  type="button"
+                                  onClick={() => setPreviewModalImage({ url: img.url, name: img.name || `${item.title} - Hình ${idx + 1}`, driveUrl: img.driveFileUrl })}
+                                  aria-label={`Xem ảnh ${img.name || idx + 1} của ${item.title}`}
+                                  className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-neutral-200 transition hover:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-neutral-700"
+                                >
+                                  <img src={img.url} alt={img.name || `Hình ${idx + 1}`} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                                </button>
+                              ))}
+                              {itemImages.length > 4 && (
+                                <button type="button" onClick={() => setViewingBriefItem(item)} className="h-10 rounded-md border border-neutral-200 px-2 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800">
+                                  +{itemImages.length - 4}
+                                </button>
+                              )}
+                              {moodboardUrls.slice(0, 2).map((url, index) => (
+                                <a key={`${item.id}-moodboard-${index}`} href={url} target="_blank" rel="noopener noreferrer" title={`Mở moodboard ${index + 1}`}>
+                                  <img src={url} alt={`Moodboard ${index + 1}`} referrerPolicy="no-referrer" className="h-10 w-10 rounded-md border border-neutral-200 object-cover dark:border-neutral-700" />
+                                </a>
+                              ))}
+                              {item.driveFolderUrl && (
+                                <a href={item.driveFolderUrl} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800" title="Mở thư mục Drive của sản phẩm">
+                                  <FolderOpen className="h-4 w-4" /> Drive
+                                </a>
+                              )}
+                              {item.clientFolderUrl && (
+                                <a href={item.clientFolderUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800" title="Mở thư mục Drive của khách hàng">
+                                  <Folder className="h-4 w-4" /> Khách hàng
+                                </a>
+                              )}
+                              {item.driveFileUrl && !item.driveFolderUrl && (
+                                <a href={item.driveFileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">
+                                  <ExternalLink className="h-4 w-4" /> Drive
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </article>
                       );
                     })}
                   </div>

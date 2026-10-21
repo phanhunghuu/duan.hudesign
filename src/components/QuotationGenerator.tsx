@@ -381,45 +381,51 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5 no-print">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight font-display flex items-center gap-2.5">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-display flex items-center gap-3">
             <FileSpreadsheet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            Tạo Bảng Thống kê & Báo giá Studio
+            Báo giá
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Tự động tổng hợp các sản phẩm thiết kế, tính toán đơn giá, thuế VAT và xuất mẫu báo giá chuẩn PDF
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
+            Tạo báo giá từ sản phẩm thiết kế, quản lý thanh toán và lưu lịch sử.
           </p>
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center p-1 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-xs font-semibold">
+        <div className="flex items-center gap-2 overflow-x-auto max-w-full">
+          <div className="flex items-center p-1 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm font-semibold shrink-0" role="tablist" aria-label="Các chế độ báo giá">
             <button
               onClick={() => setActiveTab('editor')}
+              role="tab"
+              aria-selected={activeTab === 'editor'}
               className={`px-3 py-1.5 rounded-lg transition ${
                 activeTab === 'editor' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-bold shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              Chỉnh sửa báo giá
+              Chỉnh sửa
             </button>
             <button
               onClick={() => setActiveTab('preview')}
+              role="tab"
+              aria-selected={activeTab === 'preview'}
               className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                 activeTab === 'preview' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-bold shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              Xem trước (Preview)
+              Xem trước
             </button>
             <button
               onClick={() => setActiveTab('history')}
+              role="tab"
+              aria-selected={activeTab === 'history'}
               className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                 activeTab === 'history' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-bold shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <History className="w-3.5 h-3.5" />
-              Lịch sử ({quotations.length})
+              Lịch sử <span className="tabular-nums">{safeQuotations.length}</span>
             </button>
           </div>
         </div>
@@ -427,14 +433,15 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
 
       {/* VIEW 1: EDITOR MODE */}
       {activeTab === 'editor' && (
-        <div className="space-y-6 no-print">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start no-print">
           {/* Client & Metadata Configuration Card */}
-          <div className={`p-5 sm:p-6 rounded-xl border ${
+          <div className={`lg:col-span-8 p-5 sm:p-6 rounded-xl border ${
             isLight ? 'bg-white border-gray-200 shadow-sm' : 'bg-gray-900/80 border-gray-800'
           }`}>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              1. Thông tin Khách hàng & Báo giá
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-gray-900 text-white text-xs inline-flex items-center justify-center">1</span>
+              Khách hàng và thông tin báo giá
+              <span className={`ml-auto rounded-md px-2 py-1 text-[11px] font-semibold ${isLight ? 'bg-gray-100 text-gray-600' : 'bg-gray-800 text-gray-300'}`}>{quotationNumber}</span>
             </h3>
 
             <div className="space-y-4">
@@ -446,7 +453,7 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                   <select
                     value={selectedClientId}
                     onChange={(e) => handleSelectClient(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-xs font-semibold border focus:outline-hidden ${
+                    className={`w-full min-h-11 px-3 py-2 rounded-lg text-sm font-semibold border focus:outline-hidden ${
                       isLight ? 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500' : 'bg-gray-950 border-gray-800 text-gray-100 focus:border-blue-500'
                     }`}
                   >
@@ -465,7 +472,7 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                     type="date"
                     value={issueDate}
                     onChange={(e) => setIssueDate(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-xs border focus:outline-hidden ${
+                    className={`w-full min-h-11 px-3 py-2 rounded-lg text-sm border focus:outline-hidden ${
                       isLight ? 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500' : 'bg-gray-950 border-gray-800 text-gray-100 focus:border-blue-500'
                     }`}
                   />
@@ -483,7 +490,7 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                     placeholder="VD: Nguyễn Thanh Tùng..."
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-xs border focus:outline-hidden ${
+                    className={`w-full min-h-11 px-3 py-2 rounded-lg text-sm border focus:outline-hidden ${
                       isLight ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500' : 'bg-gray-950 border-gray-700 text-gray-100 focus:border-blue-500'
                     }`}
                   />
@@ -498,7 +505,7 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                     placeholder="VD: The Vintage Roastery Co."
                     value={clientCompany}
                     onChange={(e) => setClientCompany(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-xs border focus:outline-hidden ${
+                    className={`w-full min-h-11 px-3 py-2 rounded-lg text-sm border focus:outline-hidden ${
                       isLight ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500' : 'bg-gray-950 border-gray-700 text-gray-100 focus:border-blue-500'
                     }`}
                   />
@@ -571,21 +578,21 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
           </div>
 
           {/* Line Items Table */}
-          <div className={`rounded-xl border overflow-hidden ${
+          <div className={`lg:col-span-8 rounded-xl border overflow-hidden ${
             isLight ? 'bg-white border-gray-200 shadow-sm' : 'bg-gray-900/80 border-gray-800'
           }`}>
             <div className="p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  2. Danh mục Sản phẩm & Đơn giá
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-gray-900 text-white text-xs inline-flex items-center justify-center">2</span>
+                  Danh mục sản phẩm và đơn giá
                 </h3>
-                <p className="text-xs text-gray-500 mt-0.5">Tự động tính thành tiền theo số lượng và đơn giá</p>
+                <p className="text-sm text-gray-500 mt-1">Tự động tính thành tiền theo số lượng và đơn giá</p>
               </div>
 
               <button
                 onClick={handleAddItem}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition"
+                className="min-h-10 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Thêm hạng mục
@@ -594,18 +601,18 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
 
             {/* Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full min-w-[1050px] text-left text-sm border-collapse">
                 <thead>
                   <tr className={`border-b text-gray-500 font-semibold ${
                     isLight ? 'bg-gray-50 border-gray-200' : 'bg-gray-950/60 border-gray-800'
                   }`}>
-                    <th className="py-3 px-4 w-12 text-center">#</th>
+                    <th className="py-3 px-4 w-12 text-center whitespace-nowrap">#</th>
                     <th className="py-3 px-4 min-w-[240px]">Tên sản phẩm thiết kế & Brief</th>
                     <th className="py-3 px-4 min-w-[130px]">Danh mục</th>
-                    <th className="py-3 px-3 w-20 text-center">SL</th>
-                    <th className="py-3 px-3 w-24">Đơn vị</th>
-                    <th className="py-3 px-4 min-w-[140px] text-right">Đơn giá (VNĐ)</th>
-                    <th className="py-3 px-4 min-w-[140px] text-right">Thành tiền (VNĐ)</th>
+                    <th className="py-3 px-3 w-20 text-center whitespace-nowrap">Số lượng</th>
+                    <th className="py-3 px-3 w-24 whitespace-nowrap">Đơn vị</th>
+                    <th className="py-3 px-4 min-w-[150px] text-right whitespace-nowrap">Đơn giá (VNĐ)</th>
+                    <th className="py-3 px-4 min-w-[150px] text-right whitespace-nowrap">Thành tiền (VNĐ)</th>
                     <th className="py-3 px-3 w-12 text-center"></th>
                   </tr>
                 </thead>
@@ -721,59 +728,60 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
           </div>
 
           {/* Pricing Summary & Payment Terms */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left: Notes & Bank info */}
-            <div className={`lg:col-span-7 p-5 sm:p-6 rounded-xl border space-y-4 ${
+          {/* Terms and studio bank information */}
+            <div className={`lg:col-span-8 p-5 sm:p-6 rounded-xl border space-y-4 ${
               isLight ? 'bg-white border-gray-200 shadow-sm' : 'bg-gray-900/80 border-gray-800'
             }`}>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                3. Kiểm tra thông tin & Ghi chú Studio
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-gray-900 text-white text-xs inline-flex items-center justify-center">3</span>
+                Điều khoản và ghi chú
               </h3>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Kiểm tra thông tin</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Điều khoản thanh toán</label>
                 <textarea
                   rows={4}
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg text-xs border leading-relaxed focus:outline-hidden ${
+                  className={`w-full px-3 py-2 rounded-lg text-sm border leading-relaxed focus:outline-hidden ${
                     isLight ? 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500' : 'bg-gray-950 border-gray-800 text-gray-200 focus:border-blue-500'
                   }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Ghi chú</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Ghi chú</label>
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg text-xs border focus:outline-hidden ${
+                  className={`w-full px-3 py-2 rounded-lg text-sm border focus:outline-hidden ${
                     isLight ? 'bg-gray-50 border-gray-200 text-gray-800 focus:border-blue-500' : 'bg-gray-950 border-gray-800 text-gray-200 focus:border-blue-500'
                   }`}
                 />
               </div>
 
-              <div className={`p-3.5 rounded-lg border text-xs ${
-                isLight ? 'bg-blue-50/50 border-blue-100 text-gray-700' : 'bg-gray-950 border-gray-800 text-gray-300'
+              </div>
+              <div className={`p-3.5 rounded-lg border text-xs grid grid-cols-1 sm:grid-cols-3 gap-2 ${
+                isLight ? 'bg-stone-50 border-stone-200 text-gray-700' : 'bg-gray-950 border-gray-800 text-gray-300'
               }`}>
-                <div className="font-bold text-blue-600 dark:text-blue-400 mb-1">Tài khoản Ngân hàng thụ hưởng:</div>
-                <div>{studioProfile.bankName} - Chi nhánh: {studioProfile.bankBranch}</div>
+                <div className="sm:col-span-3 font-semibold text-gray-800 dark:text-gray-100">Tài khoản ngân hàng thụ hưởng</div>
+                <div>Ngân hàng: <strong>{studioProfile.bankName}</strong> · {studioProfile.bankBranch}</div>
                 <div>Số tài khoản: <strong className="font-mono text-gray-900 dark:text-white">{studioProfile.bankAccount}</strong></div>
                 <div>Chủ tài khoản: <strong className="text-gray-900 dark:text-white">{studioProfile.bankOwner}</strong></div>
               </div>
             </div>
 
-            {/* Right: Calculations breakdown */}
-            <div className={`lg:col-span-5 p-5 sm:p-6 rounded-xl border space-y-4 ${
+            {/* Right: Persistent quote total and primary actions */}
+            <div className={`lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-4 p-5 sm:p-6 rounded-xl border space-y-4 ${
               isLight ? 'bg-white border-gray-200 shadow-sm' : 'bg-gray-900/80 border-gray-800'
             }`}>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                4. Tổng kết Chi phí
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                Tổng kết báo giá
               </h3>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-4 text-sm">
                 <div className="flex items-center justify-between text-gray-600 dark:text-gray-300">
                   <span>Tổng tiền sản phẩm (Tạm tính):</span>
                   <span className="font-bold font-mono text-sm text-gray-900 dark:text-white">{formatVND(subtotal)}</span>
@@ -790,38 +798,29 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className={`grid grid-cols-2 gap-1 p-1 rounded-lg ${isLight ? 'bg-stone-100' : 'bg-gray-900'}`}>
                     <button
                       type="button"
                       onClick={() => setUseCustomDiscount(false)}
-                      className={`px-2 py-1 rounded text-[11px] font-semibold transition ${
+                      className={`min-h-9 rounded-md text-xs font-semibold transition ${
                         !useCustomDiscount
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                          : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800'
+                          ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
-                      Theo % (
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={discountPercent}
-                        onChange={(e) => setDiscountPercent(Number(e.target.value))}
-                        className="w-10 bg-transparent text-center font-bold text-blue-600 dark:text-blue-400 border-b border-gray-300 dark:border-gray-600 focus:outline-hidden"
-                      />
-                      %)
+                      Theo %
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setUseCustomDiscount(true)}
-                      className={`px-2 py-1 rounded text-[11px] font-semibold transition ${
+                      className={`min-h-9 rounded-md text-xs font-semibold transition ${
                         useCustomDiscount
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                          : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800'
+                          ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
-                      Nhập số tiền trực tiếp
+                      Nhập số tiền
                     </button>
                   </div>
 
@@ -837,6 +836,19 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                         isLight ? 'bg-white border-gray-200 text-gray-900' : 'bg-gray-900 border-gray-700 text-white'
                       }`}
                     />
+                  )}
+                  {!useCustomDiscount && (
+                    <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={discountPercent}
+                        onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                        className={`w-16 min-h-9 px-2 rounded-md border text-center font-semibold ${isLight ? 'bg-white border-gray-200 text-gray-900' : 'bg-gray-900 border-gray-700 text-white'}`}
+                      />
+                      % trên tạm tính
+                    </label>
                   )}
                 </div>
 
@@ -859,9 +871,9 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                   <span className="font-bold font-mono text-gray-900 dark:text-white">+{formatVND(vatAmount)}</span>
                 </div>
 
-                <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-base font-extrabold text-gray-900 dark:text-gray-100">
-                  <span className="tracking-wide">TỔNG CỘNG:</span>
-                  <span className="text-2xl font-mono text-blue-600 dark:text-blue-400 font-black">
+                <div className={`pt-4 border-t flex flex-col gap-1 ${isLight ? 'border-gray-200' : 'border-gray-800'}`}>
+                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Tổng cộng</span>
+                  <span className="text-3xl font-mono tabular-nums text-[#B4532C] dark:text-orange-300 font-bold">
                     {formatVND(grandTotal)}
                   </span>
                 </div>
@@ -989,45 +1001,36 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-4 space-y-2">
+              <div className="pt-4 flex flex-col gap-2">
                 <button
-                  onClick={() => setActiveTab('preview')}
-                  className="w-full py-3 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
+                  onClick={handleSaveCurrentQuote}
+                  className="min-h-11 w-full py-2.5 rounded-lg text-sm font-semibold bg-gray-950 hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 text-white shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
                 >
-                  <Eye className="w-4 h-4" />
-                  Xem trước Báo giá & In / Xuất PDF
+                  <CheckCircle2 className="w-4 h-4" />
+                  Lưu báo giá
                 </button>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={handleSaveCurrentQuote}
-                    className={`py-2.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      isLight ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
-                    }`}
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    Lưu báo giá
-                  </button>
+                <button
+                  onClick={() => setActiveTab('preview')}
+                  className={`min-h-11 w-full py-2.5 rounded-lg text-sm font-semibold border flex items-center justify-center gap-2 transition cursor-pointer ${
+                    isLight ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  Xem trước / Xuất PDF
+                </button>
 
-                  <button
-                    onClick={handleCopyTextSummary}
-                    className={`py-2.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      isLight ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
-                    }`}
-                  >
-                    {copiedNotification ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        Đã chép!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-blue-600" />
-                        Sao chép gửi Zalo
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  onClick={handleCopyTextSummary}
+                  className={`min-h-11 w-full py-2.5 px-4 rounded-lg text-sm font-medium border flex items-center justify-center gap-2 transition cursor-pointer ${
+                    isLight ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
+                  }`}
+                  aria-label="Sao chép nội dung báo giá để gửi qua Zalo"
+                >
+                  {copiedNotification ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-blue-600" />}
+                  <span className="sm:hidden">{copiedNotification ? 'Đã chép' : 'Sao chép'}</span>
+                  <span className="hidden sm:inline">{copiedNotification ? 'Đã chép' : 'Sao chép gửi Zalo'}</span>
+                </button>
 
                 {savedNotification && (
                   <p className="text-center text-xs text-emerald-600 font-semibold animate-pulse">
@@ -1036,7 +1039,6 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                 )}
               </div>
             </div>
-          </div>
         </div>
       )}
 
@@ -1120,107 +1122,82 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
           <div className="w-full overflow-x-auto pb-6">
             <div 
               ref={quotationRef}
-              className="quotation-printable w-full max-w-[800px] mx-auto bg-white text-gray-900 rounded-xl shadow-md p-6 sm:p-8 md:p-10 border border-gray-200 transition-all font-sans relative box-border"
+              className="quotation-printable w-full max-w-[800px] mx-auto bg-white text-gray-900 rounded-xl shadow-md p-5 sm:p-7 md:p-8 border border-stone-200 transition-all font-sans relative box-border"
             >
-              {/* Header: Studio Logo & Client Info (Clean & Minimalist) */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 pb-5 border-b-2 border-gray-900">
-                <div className="space-y-2.5">
+              {/* A4 service quotation header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-5">
+                <div className="space-y-1">
                   <img
                     src="https://res.cloudinary.com/dcwgy4tnb/image/upload/v1770527011/hudesign-logo_uprmzz.png"
                     alt="Hủ Design"
-                    className="h-9 sm:h-11 w-auto object-contain"
+                    className="h-9 sm:h-10 w-auto object-contain object-left"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="text-xs text-gray-800 space-y-0.5">
-                    <p>
-                      <span className="text-gray-500 font-medium">Khách hàng:</span>{' '}
-                      <strong className="text-gray-900">{clientName || '---'}</strong>
-                    </p>
-                    <p>
-                      <span className="text-gray-500 font-medium">Đơn vị:</span>{' '}
-                      <strong className="text-gray-900">{clientCompany || '---'}</strong>
-                    </p>
-                  </div>
                 </div>
 
-                <div className="text-left sm:text-right flex flex-col sm:items-end justify-between pt-0.5">
-                  <h1 className="text-xl sm:text-2xl font-extrabold tracking-wide text-gray-900 font-display uppercase">
-                    BÁO GIÁ DỊCH VỤ
-                  </h1>
-                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-gray-600 bg-gray-100/90 px-3 py-1 rounded-lg border border-gray-200">
-                    <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Ngày báo giá:</span>
-                    <strong className="text-gray-900 font-semibold">{formatDate(issueDate)}</strong>
-                  </div>
+                <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-gray-900 font-display uppercase">BÁO GIÁ DỊCH VỤ</h1>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] rounded-xl border border-stone-200 bg-stone-50 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 overflow-hidden">
+                <div className="px-4 py-3">
+                  <span className="block text-[10px] text-stone-500">Khách hàng</span>
+                  <strong className="block mt-0.5 text-sm text-gray-900">{clientName || activeClient?.name || '---'}</strong>
+                </div>
+                <div className="px-4 py-3">
+                  <span className="block text-[10px] text-stone-500">Đơn vị</span>
+                  <strong className="block mt-0.5 text-sm text-gray-900">{clientCompany || activeClient?.company || '---'}</strong>
+                </div>
+                <div className="px-4 py-3 min-w-[120px]">
+                  <span className="block text-[10px] text-stone-500">Ngày báo giá</span>
+                  <strong className="block mt-0.5 text-sm text-gray-900">{formatDate(issueDate)}</strong>
                 </div>
               </div>
 
               {/* Quotation Table */}
               <div className="py-5">
-                <table className="w-full text-left text-xs border-collapse table-fixed">
+                <table className="w-full text-left text-[11px] border-collapse table-fixed">
                   <thead>
-                    <tr className="border-b-2 border-gray-900 bg-gray-100 text-gray-900 font-bold uppercase tracking-wider text-[10px] sm:text-[11px]">
-                      <th className="py-2.5 px-1.5 w-[5%] text-center">STT</th>
-                      <th className="py-2.5 px-2.5 w-[37%]">Hạng mục & Chi tiết thiết kế</th>
-                      <th className="py-2.5 px-1.5 w-[13%] text-center">Phân loại</th>
-                      <th className="py-2.5 px-1 w-[9%] text-center">Demo</th>
-                      <th className="py-2.5 px-1 w-[5%] text-center">SL</th>
-                      <th className="py-2.5 px-1 w-[7%] text-center">ĐVT</th>
-                      <th className="py-2.5 px-2 w-[11%] text-right">Đơn giá</th>
-                      <th className="py-2.5 px-2 w-[13%] text-right">Thành tiền</th>
+                    <tr className="bg-[#F3F1EA] text-gray-700 font-semibold text-[10px]">
+                      <th className="py-2.5 px-2 w-[6%] text-center">STT</th>
+                      <th className="py-2.5 px-2.5 w-[48%]">Hạng mục & chi tiết thiết kế</th>
+                      <th className="py-2.5 px-1 w-[8%] text-center">SL</th>
+                      <th className="py-2.5 px-1 w-[10%] text-center">ĐVT</th>
+                      <th className="py-2.5 px-2 w-[14%] text-right">Đơn giá</th>
+                      <th className="py-2.5 px-2 w-[14%] text-right">Thành tiền</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-stone-200">
                     {quoteItems.map((item, index) => (
                       <tr key={item.id} className="align-top page-break-inside-avoid">
-                        <td className="py-2.5 px-1.5 text-center font-mono font-semibold text-gray-500 text-[11px]">
+                        <td className="py-3 px-2 text-center font-mono text-gray-500">
                           {index + 1}
                         </td>
-                        <td className="py-2.5 px-2.5 space-y-1">
-                          <div className="font-bold text-gray-900 text-xs sm:text-[13px] leading-snug break-words">
+                        <td className="py-3 px-2.5 space-y-1">
+                          <div className="font-semibold text-gray-900 text-xs leading-snug break-words">
                             {item.title}
                           </div>
                           {item.description && (
-                            <div className="text-[10px] sm:text-[11px] text-gray-600 leading-relaxed whitespace-pre-line break-words">
+                            <div className="text-[10px] text-gray-600 leading-relaxed whitespace-pre-line break-words">
                               {item.description}
                             </div>
                           )}
-                        </td>
-                        <td className="py-2.5 px-1.5 text-center">
-                          {item.category ? (
-                            <span className="inline-block text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200 leading-tight break-words max-w-full">
-                              {item.category}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-gray-300 font-mono">—</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-1 text-center whitespace-nowrap">
-                          {item.driveFileUrl || item.demoImageUrl ? (
-                            <a
-                              href={item.driveFileUrl || item.demoImageUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-600 hover:text-white transition group"
-                              title="Xem ảnh demo"
-                            >
-                              <span>Xem ảnh</span>
-                              <ExternalLink className="w-2.5 h-2.5 text-blue-500 group-hover:text-white transition" />
+                          {item.category && <div className="text-[9px] text-stone-600">{item.category}</div>}
+                          {(item.driveFileUrl || item.demoImageUrl) && (
+                            <a href={item.driveFileUrl || item.demoImageUrl} target="_blank" rel="noopener noreferrer" className="brand-accent inline-flex items-center gap-1 text-[9px] font-medium text-[#B4532C]">
+                              Xem demo <ExternalLink className="w-2.5 h-2.5" />
                             </a>
-                          ) : (
-                            <span className="text-[10px] text-gray-300 font-mono">—</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-1 text-center font-bold text-gray-800 text-[11px]">
+                        <td className="py-3 px-1 text-center font-semibold text-gray-800">
                           {item.quantity}
                         </td>
-                        <td className="py-2.5 px-1 text-center text-gray-700 text-[11px] break-words">
+                        <td className="py-3 px-1 text-center text-gray-700 break-words">
                           {item.unit}
                         </td>
-                        <td className="py-2.5 px-2 text-right font-mono text-gray-800 font-medium text-[11px] whitespace-nowrap">
+                        <td className="py-3 px-2 text-right text-gray-800 whitespace-nowrap">
                           {formatVND(item.unitPrice)}
                         </td>
-                        <td className="py-2.5 px-2 text-right font-mono font-bold text-gray-900 text-xs sm:text-[13px] whitespace-nowrap">
+                        <td className="py-3 px-2 text-right font-semibold text-gray-900 whitespace-nowrap">
                           {formatVND(item.amount)}
                         </td>
                       </tr>
@@ -1230,60 +1207,13 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
               </div>
 
               {/* Financial Summary */}
-              <div className="pt-4 border-t-2 border-gray-900 flex flex-col sm:flex-row justify-between gap-6 page-break-inside-avoid">
-                {/* Payment Details */}
-                <div className="flex-1 space-y-3 text-xs text-gray-700">
-                  <div>
-                    <h4 className="font-bold text-gray-900 uppercase tracking-wider text-[11px] mb-1.5">
-                      THÔNG TIN CHUYỂN KHOẢN
-                    </h4>
-                    <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <img
-                        src={studioProfile.bankQrImage || "https://res.cloudinary.com/dcwgy4tnb/image/upload/v1788150305/35b04d18-2b37-4d17-872e-c63fb6103626.png"}
-                        alt="Vietcombank QR"
-                        className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-md border border-gray-200 bg-white p-1 shrink-0 shadow-2xs"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="text-[11px] text-gray-800 space-y-1">
-                        <p>
-                          <span className="text-gray-500 font-medium">Ngân hàng:</span>{' '}
-                          <strong>{studioProfile.bankName || 'Vietcombank chi nhánh Cần Thơ'}</strong>
-                        </p>
-                        <p>
-                          <span className="text-gray-500 font-medium">Số tài khoản:</span>{' '}
-                          <strong className="font-mono text-blue-700 text-xs font-bold">{studioProfile.bankAccount || '1015064592'}</strong>
-                        </p>
-                        <p>
-                          <span className="text-gray-500 font-medium">Chủ tài khoản:</span>{' '}
-                          <strong>{studioProfile.bankOwner || 'PHAN HUNG HUU'}</strong>
-                        </p>
-                        <p>
-                          <span className="text-gray-500 font-medium">Nội dung:</span>{' '}
-                          <strong className="font-mono text-gray-900 font-bold bg-white px-1.5 py-0.5 rounded border border-gray-200 inline-block mt-0.5">
-                            thanh toan dich vu {removeVietnameseTones(clientName || activeClient?.name || 'khach hang')}
-                          </strong>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {paymentTerms && (
-                    <div>
-                      <h5 className="font-bold text-gray-900 text-[11px] uppercase tracking-wider mb-0.5">Kiểm tra thông tin:</h5>
-                      <p className="text-[11px] text-gray-600 leading-relaxed whitespace-pre-line">{paymentTerms}</p>
-                    </div>
-                  )}
-
-                  {notes && (
-                    <div>
-                      <h5 className="font-bold text-gray-900 text-[11px] uppercase tracking-wider mb-0.5">Ghi chú:</h5>
-                      <p className="text-[11px] text-gray-600 leading-relaxed whitespace-pre-line">{notes}</p>
-                    </div>
-                  )}
+              <div className="pt-4 border-t border-gray-900 grid grid-cols-1 sm:grid-cols-[1.2fr_0.8fr] gap-6 page-break-inside-avoid">
+                <div className="space-y-3 text-xs text-gray-700">
+                  {paymentTerms && <div><h4 className="brand-accent font-bold text-[#B4532C] text-[10px] uppercase tracking-wide mb-1">Kiểm tra thông tin</h4><p className="text-[10px] text-gray-700 leading-relaxed whitespace-pre-line">{paymentTerms}</p></div>}
+                  {notes && <div><h4 className="brand-accent font-bold text-[#B4532C] text-[10px] uppercase tracking-wide mb-1">Ghi chú</h4><p className="text-[10px] text-gray-700 leading-relaxed whitespace-pre-line">{notes}</p></div>}
                 </div>
 
-                {/* Total Calculation Column */}
-                <div className="w-full sm:w-72 shrink-0 space-y-2 text-xs">
+                <div className="space-y-2 text-[10px]">
                   <div className="flex justify-between py-1 border-b border-gray-200 text-gray-700">
                     <span>Cộng tiền hàng (Tạm tính):</span>
                     <span className="font-mono font-bold text-gray-900">{formatVND(subtotal)}</span>
@@ -1303,26 +1233,39 @@ export const QuotationGenerator: React.FC<QuotationGeneratorProps> = ({
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center py-2.5 border-b-2 border-gray-900 text-sm font-extrabold text-gray-900">
-                    <span className="tracking-wide uppercase font-extrabold">TỔNG CỘNG:</span>
-                    <span className="font-mono text-blue-600 text-lg sm:text-xl font-black">{formatVND(grandTotal)}</span>
+                  <div className="flex justify-between items-center py-2.5 border-b border-gray-900 text-sm font-extrabold text-gray-900">
+                    <span className="tracking-wide uppercase font-extrabold">Tổng cộng</span>
+                    <span className="brand-accent font-mono text-[#B4532C] text-lg sm:text-xl font-bold">{formatVND(grandTotal)}</span>
                   </div>
 
                   {depositAmount > 0 && (
                     <div className="space-y-1.5 pt-1">
-                      <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 flex justify-between items-center text-xs text-blue-900 font-bold">
+                      <div className="p-2.5 rounded-lg bg-[#FBF3EF] border border-[#EED5C8] flex justify-between items-center text-[10px] text-gray-900 font-semibold">
                         <span>Tạm ứng đợt 1 ({effectiveDepositPercent}%):</span>
                         <span className="font-mono text-sm">{formatVND(depositAmount)}</span>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 flex justify-between items-center text-xs font-bold text-rose-700">
+                      <div className="p-2.5 rounded-lg border border-stone-200 flex justify-between items-center text-[10px] font-semibold text-gray-900">
                         <span>Còn lại:</span>
-                        <span className="font-mono text-sm sm:text-base font-black text-rose-600">
+                        <span className="font-mono text-sm font-bold text-gray-900">
                           {formatVND(remainingAmount)}
                         </span>
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              <div className="mt-5 p-3 rounded-xl bg-[#F6F4EF] border border-stone-200 grid grid-cols-1 sm:grid-cols-[148px_1fr_1fr] gap-4 items-center page-break-inside-avoid">
+                <img src={studioProfile.bankQrImage || "https://res.cloudinary.com/dcwgy4tnb/image/upload/v1788150305/35b04d18-2b37-4d17-872e-c63fb6103626.png"} alt="Mã QR thanh toán" className="w-36 h-36 object-contain rounded-lg border border-stone-200 bg-white p-1 mx-auto sm:mx-0" referrerPolicy="no-referrer" />
+                <div className="space-y-2 text-[10px] text-gray-700">
+                  <h4 className="brand-accent font-bold text-[#B4532C] uppercase tracking-wide">Thông tin chuyển khoản</h4>
+                  <p>Ngân hàng<br /><strong className="text-gray-900">{studioProfile.bankName || 'Vietcombank chi nhánh Cần Thơ'}</strong></p>
+                  <p>Chủ tài khoản<br /><strong className="text-gray-900">{studioProfile.bankOwner || 'PHAN HUNG HUU'}</strong></p>
+                </div>
+                <div className="space-y-2 text-[10px] text-gray-700">
+                  <p>Số tài khoản<br /><strong className="brand-accent font-mono text-[#B4532C] text-sm">{studioProfile.bankAccount || '1015064592'}</strong></p>
+                  <p>Nội dung chuyển khoản<br /><strong className="inline-block rounded-md border border-stone-200 bg-white px-2 py-1 text-gray-900">thanh toan dich vu {removeVietnameseTones(clientName || activeClient?.name || 'khach hang')}</strong></p>
                 </div>
               </div>
 
